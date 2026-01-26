@@ -11,16 +11,26 @@ ENV/
 
 # Output files
 *.json
+!question_categories.json
 *.csv
+!questions.csv
 *.txt
 !requirements.txt
 !video_ids.txt.example
+!missing_videos_questions_template.txt
+!missing_videos.txt
 
 # API keys and secrets
 .env
+.env.local
 *.key
 *_key.txt
+*api*key*.txt
+*api*key*.py
 config.json
+secrets.json
+# YouTube API key (if accidentally committed)
+*AIzaSy*
 
 # IDE
 .vscode/

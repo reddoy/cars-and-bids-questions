@@ -66,6 +66,10 @@ def extract_questions(description):
     timestamp_pattern = re.compile(r'^(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})\s+(.+)$')
     timestamp_pattern_alt = re.compile(r'^(.+?)\s*-\s*(\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2})$')
     
+    # Track if we're in a Q&A section
+    in_qa_section = False
+    qa_section_start = None
+    
     for line in lines[chapters_start_idx:]:
         line = line.strip()
         if not line:
@@ -75,19 +79,41 @@ def extract_questions(description):
         if line.startswith('#') or (line.startswith('http') and '://' in line) or line.startswith('='):
             break
         
+        # Check if we're entering a Q&A section
+        line_lower = line.lower()
+        section_headers = ['community questions', 'q&a', 'questions', 'question time']
+        is_section_header = any(header in line_lower for header in section_headers) and len(line_lower.split()) <= 3
+        
+        if is_section_header:
+            in_qa_section = True
+            # Don't include section headers as questions, just mark that we're in Q&A
+            continue
+        
+        # Check if we're leaving Q&A section (Final Thoughts, Outro, etc.)
+        if in_qa_section:
+            end_markers = ['final thoughts', 'outro', 'closing', 'wrap up', 'conclusion']
+            if any(marker in line_lower for marker in end_markers):
+                in_qa_section = False
+                continue
+        
         # Try standard format: timestamp followed by text
         match = timestamp_pattern.match(line)
         if match:
             timestamp = match.group(1)
             question_text = match.group(2).strip()
             
-            # Extract all lines that contain a question mark anywhere
-            if question_text and '?' in question_text:
-                questions.append({
-                    'timestamp': timestamp,
-                    'timestamp_seconds': parse_timestamp(timestamp),
-                    'question': question_text
-                })
+            # Extract if it contains a question mark OR if we're in Q&A section
+            # But exclude section headers and end markers
+            if question_text:
+                exclude_patterns = ['community questions', 'q&a', 'final thoughts', 'outro', 'closing']
+                is_excluded = any(pattern in question_text.lower() for pattern in exclude_patterns)
+                
+                if not is_excluded and ('?' in question_text or in_qa_section):
+                    questions.append({
+                        'timestamp': timestamp,
+                        'timestamp_seconds': parse_timestamp(timestamp),
+                        'question': question_text
+                    })
         else:
             # Try alternative format: text - timestamp (like "Q&A- 58:57")
             match_alt = timestamp_pattern_alt.match(line)
@@ -95,13 +121,18 @@ def extract_questions(description):
                 question_text = match_alt.group(1).strip()
                 timestamp = match_alt.group(2)
                 
-                # Extract if it contains a question mark
-                if question_text and '?' in question_text:
-                    questions.append({
-                        'timestamp': timestamp,
-                        'timestamp_seconds': parse_timestamp(timestamp),
-                        'question': question_text
-                    })
+                # Extract if it contains a question mark OR if we're in Q&A section
+                # But exclude section headers and end markers
+                if question_text:
+                    exclude_patterns = ['community questions', 'q&a', 'final thoughts', 'outro', 'closing']
+                    is_excluded = any(pattern in question_text.lower() for pattern in exclude_patterns)
+                    
+                    if not is_excluded and ('?' in question_text or in_qa_section):
+                        questions.append({
+                            'timestamp': timestamp,
+                            'timestamp_seconds': parse_timestamp(timestamp),
+                            'question': question_text
+                        })
     
     return questions
 

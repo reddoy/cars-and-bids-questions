@@ -52,23 +52,45 @@ def update_html_questions_array(html_file, csv_file, transcriptions_file=None):
     js_array = json.dumps(questions, indent=8, ensure_ascii=False)
     
     # Replace the questions array in the HTML
-    # The array is on a single line, so we'll find the line and replace it
-    lines = html_content.split('\n')
+    # Find the start of the array
+    start_marker = '        const questions = ['
+    start_pos = html_content.find(start_marker)
     
-    # Find the line with "const questions = ["
-    line_idx = None
-    for i, line in enumerate(lines):
-        if 'const questions = [' in line:
-            line_idx = i
-            break
-    
-    if line_idx is None:
+    if start_pos == -1:
         print("Could not find 'const questions = [' in HTML")
         return False
     
-    # Replace that line
-    lines[line_idx] = '        const questions = ' + js_array + ';'
-    new_html = '\n'.join(lines)
+    # Find the end of the array by looking for the closing ]; 
+    # We need to find the matching closing bracket
+    # Start searching after the opening bracket
+    search_start = start_pos + len(start_marker)
+    bracket_count = 1  # We already found the opening [
+    end_pos = None
+    
+    for i in range(search_start, len(html_content)):
+        if html_content[i] == '[':
+            bracket_count += 1
+        elif html_content[i] == ']':
+            bracket_count -= 1
+            if bracket_count == 0:
+                # Found the closing bracket, check for semicolon
+                if i + 1 < len(html_content) and html_content[i + 1] == ';':
+                    end_pos = i + 2
+                    break
+                elif i + 1 < len(html_content):
+                    # Might be on next line, check a bit further
+                    next_chars = html_content[i+1:i+10].strip()
+                    if next_chars.startswith(';'):
+                        end_pos = i + 1 + next_chars.find(';') + 1
+                        break
+    
+    if end_pos is None:
+        print("Could not find end of questions array")
+        return False
+    
+    # Replace the entire array
+    replacement = '        const questions = ' + js_array + ';'
+    new_html = html_content[:start_pos] + replacement + html_content[end_pos:]
     
     # Write back
     with open(html_file, 'w', encoding='utf-8') as f:
