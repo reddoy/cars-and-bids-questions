@@ -106,8 +106,6 @@ def update_html_stats(html_file, stats):
          f'<div class="stat-box-value">{stats["estimated_questions_per_hour"]}</div>\n                        <div class="stat-box-label">Estimated Rate</div>'),
         (r'<div class="stat-box-value">19</div>\s*<div class="stat-box-label">Holiday Special EP40</div>',
          f'<div class="stat-box-value">{stats["max_questions_in_video"]}</div>\n                        <div class="stat-box-label">{stats["video_with_most_questions_title"]}</div>'),
-        (r'<div class="stat-box-value">1</div>\s*<div class="stat-box-label">Minimum Questions</div>',
-         f'<div class="stat-box-value">{stats["min_questions_in_video"]}</div>\n                        <div class="stat-box-label">Minimum Questions</div>'),
     ]
     
     for pattern, replacement in replacements:
@@ -145,4 +143,5 @@ def update_html_stats(html_file, stats):
 if __name__ == '__main__':
     stats = calculate_stats('questions.csv')
     update_html_stats('questions_search.html', stats)
+
 
