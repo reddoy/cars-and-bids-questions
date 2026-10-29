@@ -19,7 +19,7 @@
 
 3. **Your site will be live at:**
    ```
-   https://YOUR_USERNAME.github.io/carsandbidsqs/
+   https://reddoy.github.io/cars-and-bids-questions/
    ```
 
 That's it! 🎉
