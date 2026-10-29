@@ -4,6 +4,12 @@ A searchable archive of every community question answered on [THIS CAR POD](http
 
 **Live:** [reddoy.github.io/cars-and-bids-questions](https://reddoy.github.io/cars-and-bids-questions/)
 
+**Status:** Fan project, not affiliated with Cars & Bids.
+
+## Background
+
+I love watching the Cars & Bids podcast, so I gathered every community question in one place. You can look up a question and jump straight to how the hosts answered it.
+
 ## Features
 
 - Search 560+ questions across every episode
