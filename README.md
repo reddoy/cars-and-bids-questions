@@ -1,6 +1,6 @@
-# Cars & Bids Questions
+# THIS CAR POD Questions
 
-A searchable archive of every community question answered on [THIS CAR POD](https://www.youtube.com/playlist?list=PLRsapyZqDs1oR-egCLXRK-qmdPIZf1y5-), the Cars & Bids podcast. Each question links straight to the timestamp in the episode where it's answered.
+Every community question answered on [THIS CAR POD](https://www.youtube.com/playlist?list=PLRsapyZqDs1oR-egCLXRK-qmdPIZf1y5-), the Cars & Bids podcast, in one searchable app. Search the questions and what the hosts actually said, watch the answer right where it starts, and copy the transcript.
 
 **Live:** [reddoy.github.io/cars-and-bids-questions](https://reddoy.github.io/cars-and-bids-questions/)
 
@@ -8,55 +8,69 @@ A searchable archive of every community question answered on [THIS CAR POD](http
 
 ## Background
 
-I love watching the Cars & Bids podcast, so I gathered every community question in one place. You can look up a question and jump straight to how the hosts answered it.
+I love watching the Cars & Bids podcast, so I gathered every community question in one place. You can look up a question, see whether it's been asked before, and jump straight to how the hosts answered it.
 
 ## Features
 
-- Search 560+ questions across every episode
-- Jump to the exact moment each question is answered on YouTube
-- Questions grouped into categories (car brands, rankings and comparisons, personal questions, and more)
-- Stats on question counts and how long answers run
+- **Search:** questions, episode titles and the hosts' answers, with typo tolerance and highlighted matches
+- **Watch the answer:** each question opens a player that starts at the moment it's asked, next to the answer transcript, with buttons to copy the answer or a share link
+- **Episodes:** every episode with a timeline showing where its questions land
+- **Spin the pod:** a slot machine that lands on a random question, optionally from one category
+- **Stats:** questions per episode, categories, most asked-about brands and record holders
+- **Weekly updates:** a GitHub Action adds new episodes every Saturday
 
 ## Tech stack
 
-- A static site in a single HTML page with vanilla JavaScript, hosted on GitHub Pages
-- Python scripts that pull data from the YouTube Data API v3
+- **App:** React, TypeScript, Vite, Tailwind CSS, Motion for animations, MiniSearch for search, hosted on GitHub Pages
+- **Data:** Python, with yt-dlp or the YouTube Data API for episodes and youtube-transcript-api for captions
 
 ## How the data is built
 
-Each script reads and writes files in the repo root:
+`pipeline/update.py` does everything, and only fetches what's new:
 
-| Step | Script | Reads | Writes |
-|---|---|---|---|
-| 1 | `get_youtube_descriptions.py` | The podcast playlist | `youtube_descriptions.json` |
-| 2 | `extract_questions.py` | `youtube_descriptions.json` | `questions.csv`, parsed from each episode's "Community Questions" timestamps |
-| 3 | `add_missing_questions.py` | `missing_videos_questions_template.txt` | `questions.csv`, for episodes without timestamps in the description |
-| 4 | `update_html_questions.py` | `questions.csv` | The question list in `questions_search.html` |
-| 5 | `update_html_stats.py` | `questions.csv` | The stats section in `questions_search.html` |
+1. Lists the podcast playlist and fetches details for any new episodes.
+2. Pulls the community questions and timestamps out of each new episode's description (`pipeline/extract.py`).
+3. Cuts each answer out of YouTube's auto-generated captions, from the question's timestamp to the next chapter.
+4. Sorts each new question into a category with keyword rules (`pipeline/categorize.py`).
+5. Writes slimmed-down copies for the app to `web/public/data/`.
 
-Helper scripts:
-
-- `check_playlist.py` compares the playlist against what's already fetched.
-- `calculate_question_stats.py` and `calculate_answer_durations_fixed.py` print stats.
-
-`index.html` is the page GitHub Pages serves.
-
-## Getting started
+| File | What's in it |
+|---|---|
+| `data/episodes.json` | Every episode: title, number, date, length and description |
+| `data/questions.json` | Every question: episode, timestamp, text and category |
+| `data/transcripts.json` | The hosts' answer to each question, or `null` if the episode has no captions |
 
 ```bash
-pip install -r requirements.txt
-export YOUTUBE_API_KEY=your_key   # from Google Cloud Console with YouTube Data API v3 enabled
-
-python get_youtube_descriptions.py --playlist "https://www.youtube.com/playlist?list=PLRsapyZqDs1oR-egCLXRK-qmdPIZf1y5-"
-python extract_questions.py --input youtube_descriptions.json --output questions.csv
-python update_html_questions.py
-python update_html_stats.py
+pip install -r pipeline/requirements.txt
+python3 pipeline/update.py                      # add new episodes and answers
+python3 pipeline/update.py --retry-transcripts  # also retry answers that had no captions
 ```
 
-`get_youtube_descriptions.py` also accepts `--input video_ids.txt` for specific videos and `--format json|txt|csv`. Run any script with `--help` to see its options.
+YouTube rate-limits caption downloads. If it starts refusing, the script stops and saves what it has, and the next run picks up where it left off. `--delay` sets the wait between episodes (default 5 seconds).
 
-API quota: fetching a video costs 1 unit, and each playlist page of 50 videos costs 1 more. The default quota is 10,000 units per day.
+Episodes from before the descriptions listed questions were filled in by hand and live in `data/questions.json` like the rest.
+
+## Running the app
+
+```bash
+cd web
+npm install
+npm run dev       # http://localhost:5173
+npm run build     # production build in web/dist
+```
 
 ## Deploying
 
-See [`DEPLOY.md`](DEPLOY.md). The site is served by GitHub Pages from the `main` branch.
+`.github/workflows/site.yml` builds the app and deploys it to GitHub Pages on every push to `main`. Every Saturday it also runs the pipeline, commits any new episodes and redeploys.
+
+The weekly update needs a `YOUTUBE_API_KEY` repository secret (a YouTube Data API v3 key from Google Cloud Console), because YouTube blocks scraping from GitHub's servers. Captions usually can't be fetched from GitHub either, so new answers show up after the next local run of `pipeline/update.py`.
+
+## Project structure
+
+| Path | What's in it |
+|---|---|
+| `web/` | The React app: pages in `web/src/pages/`, shared pieces in `web/src/components/` |
+| `web/public/data/` | Data the app loads, generated by the pipeline |
+| `pipeline/` | The Python data pipeline |
+| `data/` | The pipeline's source data |
+| `.github/workflows/site.yml` | Weekly update and GitHub Pages deploy |

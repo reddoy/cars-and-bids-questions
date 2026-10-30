@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #070707;
+  --color-panel: #111112;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-mint: #5fd39b;
+  --color-sun: #ffe14d;
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-color: rgb(255 255 255 / 0.15) transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-mint);
+    color: black;
+  }
+
+  mark {
+    background: rgb(255 225 77 / 0.25);
+    color: var(--color-sun);
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+}
+
+@utility font-wide {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Grain over everything, so the black doesn't look flat. */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.road-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

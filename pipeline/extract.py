@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-"""
-Extract timestamps and questions from YouTube video descriptions.
+"""Pull the community questions and their timestamps out of an episode description.
 
-This script parses video descriptions to find the "Community Questions" section
-and extracts all timestamps and questions that follow.
+Descriptions list chapters as "01:12:34 Question text". This finds the Q&A
+section (or, if there isn't one, any chapter ending in a question mark).
 """
 
-import json
 import re
-import csv
-import argparse
 
 
 def parse_timestamp(timestamp_str):
@@ -225,94 +220,4 @@ def extract_questions(description):
                         })
     
     return questions
-
-
-def process_videos(input_file, output_file):
-    """Process video descriptions and extract questions."""
-    # Read JSON file
-    print(f"Reading video descriptions from {input_file}...")
-    with open(input_file, 'r', encoding='utf-8') as f:
-        videos = json.load(f)
-    
-    print(f"Processing {len(videos)} videos...")
-    
-    # Extract questions from each video
-    all_questions = []
-    videos_without_questions = []
-    
-    for video in videos:
-        video_id = video['video_id']
-        title = video['title']
-        description = video.get('description', '')
-        url = video.get('url', '')
-        
-        questions = extract_questions(description)
-        
-        if questions:
-            for q in questions:
-                all_questions.append({
-                    'video_id': video_id,
-                    'video_title': title,
-                    'video_url': url,
-                    'timestamp': q['timestamp'],
-                    'timestamp_seconds': q['timestamp_seconds'],
-                    'question': q['question']
-                })
-        else:
-            videos_without_questions.append(title)
-    
-    # Write to CSV
-    print(f"\nFound {len(all_questions)} questions from {len(videos) - len(videos_without_questions)} videos")
-    
-    if videos_without_questions:
-        print(f"Note: {len(videos_without_questions)} videos had no chapters section or no questions ending with '?' found")
-    
-    print(f"Writing results to {output_file}...")
-    
-    fieldnames = ['video_id', 'video_title', 'video_url', 'timestamp', 'timestamp_seconds', 'question']
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(all_questions)
-    
-    print(f"Successfully wrote {len(all_questions)} questions to {output_file}")
-    
-    return len(all_questions), len(videos_without_questions)
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Extract timestamps and questions from YouTube video descriptions',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python extract_questions.py --input youtube_descriptions.json --output questions.csv
-        """
-    )
-    
-    parser.add_argument('--input', '-i',
-                       help='Input JSON file with video descriptions (default: youtube_descriptions.json)',
-                       default='youtube_descriptions.json')
-    parser.add_argument('--output', '-o',
-                       help='Output CSV file (default: questions.csv)',
-                       default='questions.csv')
-    
-    args = parser.parse_args()
-    
-    try:
-        count, missing = process_videos(args.input, args.output)
-        print(f"\nSummary:")
-        print(f"  Total questions extracted: {count}")
-        print(f"  Videos without chapters/questions: {missing}")
-    except FileNotFoundError as e:
-        print(f"Error: File not found: {e}")
-    except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON file: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-        raise
-
-
-if __name__ == '__main__':
-    main()
 

@@ -1,48 +1,18 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-.venv
+.venv/
 
-# Output files
-*.json
-!question_categories.json
-*.csv
-!questions.csv
-*.txt
-!requirements.txt
-!video_ids.txt.example
-!missing_videos_questions_template.txt
-!missing_videos.txt
+# Web app
+node_modules/
+web/dist/
 
-# API keys and secrets
+# Secrets
 .env
-.env.local
-*.key
-*_key.txt
-*api*key*.txt
-*api*key*.py
-config.json
-secrets.json
-# YouTube API key (if accidentally committed)
-*AIzaSy*
+.env.*
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
+# OS and editors
 .DS_Store
 Thumbs.db
-
-
-
-
-
+.vscode/
+.idea/
